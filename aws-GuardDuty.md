@@ -104,3 +104,198 @@ No, GuardDuty:
 *   Detects suspicious S3 access
 *   Does not scan file contents for malware
 (Use Amazon Macie or third-party tools for that.)
+
+### 16. What are "Trusted IP" lists?
+**Answer:**
+Trusted IP lists contain white-listed IPs (like your corporate VPN) that GuardDuty will stop generating findings for.
+
+### 17. GuardDuty is costing too much due to high VPC Flow Log volume. How do you optimize it?
+**Answer:**
+The Key: Unlike manual log analysis, you don't pay for the storage of logs used by GuardDuty—you pay for the analysis. To optimize:
+1. Identify the specific account or resource driving the cost using the GuardDuty "Usage" tab.
+2. Consider if certain high-traffic, low-risk VPCs can be excluded (though usually not recommended).
+3. Use S3 Protection or EKS Runtime Monitoring selectively if certain workloads don't require deep inspection.
+
+### 18. Scenario 1: Crypto-mining detected on EC2
+**Question:**
+GuardDuty reports a High severity finding: `CryptoCurrency:EC2/BitcoinTool.B!DNS`. What would you do?
+
+**Answer:**
+1. **Validate the finding:**
+    *   Check affected EC2 instance ID.
+    *   Review VPC Flow Logs and DNS queries.
+2. **Contain:**
+    *   Isolate instance using a quarantine security group.
+    *   Block outbound internet access.
+3. **Investigate:**
+    *   Enable Malware Protection scan.
+    *   Review running processes and user data.
+4. **Eradicate:**
+    *   Terminate instance if immutable infrastructure.
+    *   Rotate IAM credentials.
+5. **Prevent:**
+    *   Harden AMIs.
+    *   Enable Inspector + GuardDuty auto-response.
+
+### 19. Scenario 2: Compromised IAM credentials
+**Question:**
+GuardDuty detects `UnauthorizedAccess:IAMUser/TorIPCaller`. What actions do you take?
+
+**Answer:**
+1. Immediately disable the IAM access key.
+2. Rotate credentials.
+3. Review CloudTrail logs for:
+    *   Unauthorized resource creation.
+    *   Privilege escalation attempts.
+4. Apply least privilege IAM policies.
+5. Enable MFA.
+6. Automate via EventBridge → Lambda.
+
+### 20. Scenario 3: GuardDuty detects suspicious S3 access
+**Question:**
+Finding: `Policy:S3/BucketPublicAccessGranted`. What does GuardDuty detect and what does it NOT do?
+
+**Answer:**
+*   **Detects:** Anomalous or risky S3 access patterns and public exposure events.
+*   **Does NOT:** Scan objects for malware.
+*   **Remediation:**
+    *   Block public access.
+    *   Review bucket policy.
+    *   Enable S3 Access Analyzer.
+
+### 21. Scenario 4: Malware Protection triggered
+**Question:**
+How does GuardDuty Malware Protection work during an incident?
+
+**Answer:**
+1. GuardDuty detects suspicious behavior.
+2. Automatically creates EBS snapshot.
+3. Snapshot is scanned offline.
+4. Findings identify:
+    *   Malware family.
+    *   Impacted files.
+5. **Note:** No runtime performance impact.
+
+### 22. Scenario 5: GuardDuty finding storm (too many alerts)
+**Question:**
+GuardDuty is generating too many findings. How do you manage noise?
+
+**Answer:**
+1. Use Finding suppression rules.
+2. Adjust trusted IP lists.
+3. Suppress low-severity findings.
+4. Aggregate in Security Hub.
+5. Create severity-based response automation.
+
+### 23. Scenario 6: EKS cluster compromised
+**Question:**
+GuardDuty reports `Execution:Kubernetes/ExecInPod`. What does this mean?
+
+**Answer:**
+*   **Meaning:** Someone executed a command inside a running pod.
+*   **Possible risks:** Lateral movement, Privilege escalation.
+*   **Actions:**
+    1. Review Kubernetes audit logs.
+    2. Identify pod, namespace, service account.
+    3. Rotate secrets.
+    4. Apply Pod Security Standards.
+
+### 24. Scenario 7: GuardDuty vs Inspector confusion
+**Question:**
+An EC2 instance is vulnerable but not exploited yet. Which service detects this?
+
+**Answer:**
+*   **Amazon Inspector:** Detects CVEs and misconfigurations.
+*   **GuardDuty:** Detects active exploitation.
+*   **Best practice:** Enable both.
+
+### 25. Scenario 8: Multi-account security monitoring
+**Question:**
+How would you deploy GuardDuty across 100 AWS accounts?
+
+**Answer:**
+1. Use AWS Organizations.
+2. Enable GuardDuty in management account.
+3. Configure delegated administrator.
+4. Aggregate findings centrally.
+5. Automate onboarding for new accounts.
+
+### 26. Scenario 9: GuardDuty cannot block traffic
+**Question:**
+Why doesn’t GuardDuty stop attacks automatically?
+
+**Answer:**
+*   GuardDuty is a detection service.
+*   Separation of detection and response avoids false positives.
+*   Blocking is handled via:
+    *   Security Groups
+    *   NACLs
+    *   AWS WAF
+    *   Automation workflows
+
+### 27. Scenario 10: Data exfiltration detected
+**Question:**
+GuardDuty reports unusual outbound traffic from EC2. How do you investigate?
+
+**Answer:**
+1. Inspect VPC Flow Logs.
+2. Identify destination IP.
+3. Check DNS logs.
+4. Validate data transfer volume.
+5. Isolate instance.
+6. Review application logs.
+
+### 28. Scenario 11: GuardDuty disabled accidentally
+**Question:**
+How do you prevent GuardDuty from being disabled?
+
+**Answer:**
+1. Use SCP (Service Control Policy).
+2. Deny `guardduty:DeleteDetector`.
+3. Monitor CloudTrail for disable events.
+
+### 29. Scenario 12: GuardDuty + Security Hub
+**Question:**
+Why integrate GuardDuty with Security Hub?
+
+**Answer:**
+1. Centralized visibility.
+2. Cross-service correlation.
+3. Compliance mapping (CIS, PCI).
+4. Single dashboard for SOC teams.
+
+### 30. Scenario 13: False positive crypto mining alert
+**Question:**
+How would you handle a legitimate high CPU workload flagged as crypto mining?
+
+**Answer:**
+1. Validate application behavior.
+2. Check destination domains/IPs.
+3. Add trusted IPs.
+4. Suppress specific findings.
+5. Document exception.
+
+### 31. Scenario 14: Incident response automation
+**Question:**
+Design an automated response for high-severity GuardDuty findings.
+
+**Answer:**
+**Flow:**
+GuardDuty → EventBridge → Lambda
+→ Isolate EC2
+→ Disable IAM key
+→ Notify SOC (SNS/Slack)
+
+### 32. Scenario 15: Interview “gold answer”
+**Question:**
+How do you design a production-grade threat detection strategy using GuardDuty?
+
+**Answer:**
+1. Enable GuardDuty across all accounts.
+2. Integrate with:
+    *   Security Hub
+    *   Inspector
+    *   AWS WAF
+3. Automate response.
+4. Periodically review findings.
+5. Apply least privilege & defense in depth.
