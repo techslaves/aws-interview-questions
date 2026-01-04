@@ -71,7 +71,7 @@ Snapshot storage costs may apply temporarily.
 ### 8. Is GuardDuty agent-based?
 **Answer:**
 
-❌ No. GuardDuty is agentless and requires no software installation.
+No. GuardDuty is agentless and requires no software installation.
 
 ### 9. What is a GuardDuty Finding?
 **Answer:**
@@ -85,3 +85,85 @@ Snapshot storage costs may apply temporarily.
 4. Severity (Low / Medium / High)
 
 5. Recommended remediation
+
+### 10. Can GuardDuty block attacks automatically?
+**Answer:**
+
+No. GuardDuty is a detection service, not prevention.
+
+However, you can automate response using:
+
+EventBridge
+
+Lambda
+
+Security Hub
+
+Step Functions
+
+### 11. How do you respond automatically to GuardDuty findings?
+
+**Answer:**
+
+1. Send findings to Amazon EventBridge
+
+2. Trigger Lambda functions
+
+3. Actions may include:
+
+4. Isolate EC2 (security group update)
+
+5. Disable IAM user
+
+6. Stop compromised instance
+
+### 11. What is GuardDuty for EKS?
+
+**Answer:**
+
+GuardDuty monitors:
+
+EKS audit logs
+
+**Detects:**
+
+Privilege escalation
+
+Suspicious pod execution
+
+Malicious container behavior
+
+### 12. What is the severity classification in GuardDuty?
+
+**Answer:**
+
+**Low –** Recon or benign anomaly
+
+**Medium -** Suspicious activity
+
+**High –** Confirmed malicious behavior
+
+### 13. Does GuardDuty store logs?
+**Answer:**
+
+No, GuardDuty analyzes logs but does not store them.
+
+Logs remain in:
+
+CloudTrail
+
+VPC Flow Logs
+
+DNS logs
+
+### 14. Can GuardDuty scan S3 for malware?
+***Answer:**
+
+No, GuardDuty:
+
+Detects suspicious S3 access
+
+Does not scan file contents for malware
+
+(Use Amazon Macie or third-party tools for that.)
+
