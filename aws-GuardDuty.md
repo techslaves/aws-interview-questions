@@ -8,9 +8,13 @@ Amazon GuardDuty is a threat detection service that continuously monitors AWS ac
 
 ### 2. GuardDuty flags an EC2 instance for "UnauthorizedAccess:EC2/MaliciousIPCaller." Walk me through an automated remediation workflow.
 **Answer:**
+
 **Trigger**: GuardDuty generates a finding.
+
 **Event:** An EventBridge rule matches that finding type.
+
 **Action:** Trigger an AWS Lambda function.
+
 **Remediation:** The Lambda function could:
 1. Modify the EC2 Security Group to block the malicious IP.
 2. Isolate the instance by attaching a "Quarantine" SG.
@@ -286,9 +290,7 @@ GuardDuty → EventBridge → Lambda
 → Disable IAM key
 → Notify SOC (SNS/Slack)
 
-### 32. Scenario 15: Interview “gold answer”
-**Question:**
-How do you design a production-grade threat detection strategy using GuardDuty?
+### 32. How do you design a production-grade threat detection strategy using GuardDuty?
 
 **Answer:**
 1. Enable GuardDuty across all accounts.
