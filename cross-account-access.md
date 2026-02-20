@@ -133,10 +133,6 @@ A service that mathematically analyzes resource-based policies (S3 buckets, KMS 
 *   **Monitoring:** Use CloudTrail and Access Analyzer.
 *   **SCPs:** Use Service Control Policies to restrict maximum permissions.
 
----
-
-## 🔹 Scenario-Based Questions
-
 ### 19. Company A wants to allow Company B to upload files to a specific S3 bucket. How would you design it?
 **Answer:**
 **Option 1 (Role-Based - Preferred for programmatic access):**
@@ -171,3 +167,27 @@ A service that mathematically analyzes resource-based policies (S3 buckets, KMS 
 **Yes.**
 *   An **Explicit Deny** in any relevant policy (Identity-based policy, SCP, or Resource-based policy) always overrides an Allow.
 *   Even if the Trust Policy allows the assumption, if the user's IAM policy has a `Deny` on `sts:AssumeRole`, the request will fail.
+
+### 24. When would you use a Resource-Based Policy instead of an IAM Role for cross-account access?
+**Answer:**
+Resource-based policies (like S3 Bucket Policies or KMS Key Policies) allow a principal to access a resource without switching roles.
+
+*   **Use Resource-Based Policies when:** You want the user to stay in their own account while accessing the resource (e.g., uploading a file to a central logging bucket). This avoids the overhead of `AssumeRole` and allows the user to retain their original permissions.
+*   **Use IAM Roles when:** The task requires multiple actions across different services in the target account, or when the service doesn't support resource-based policies (like EC2 or IAM).
+
+### 25. A Lambda function in Account A needs to read from a DynamoDB table in Account B. Walk me through the setup.
+**Answer:**
+1.  **In Account B (Destination):** Create an IAM Role.
+    *   **Trust Policy:** Allow Account A's root (or better, the specific Lambda execution role ARN) to `sts:AssumeRole`.
+    *   **Permissions Policy:** Grant `dynamodb:GetItem` or `dynamodb:Query` on the specific table.
+2.  **In Account A (Source):** Update the Lambda's execution role.
+    *   **Policy:** Add `sts:AssumeRole` permission pointing to the Role ARN in Account B.
+3.  **In the Code:** Use the AWS SDK to call `sts.assume_role()`, then use those returned temporary credentials to initialize the DynamoDB client.
+
+### 26. How does policy evaluation change when cross-account access is involved?
+**Answer:**
+For cross-account access, AWS follows a **double-check logic**:
+1.  **Account A (Owner)** must explicitly grant permission (via Role Trust Policy or Resource Policy).
+2.  **Account B (User)** must explicitly grant permission (via Identity Policy).
+
+**Result:** Access is only granted if **both** accounts allow it. An explicit Deny in either account will always override any Allow.
