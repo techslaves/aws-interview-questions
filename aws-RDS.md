@@ -101,34 +101,30 @@ To implement DR in RDS, I use Multi-AZ for high availability within a region and
 *   **RTO:** Hours.
 *   **RPO:** Depends on snapshot frequency.
 
-When we promote cross regional RDS replica as primary replica how will pod running in EKS in another region communicate to that?
+### 13. When we promote a cross-regional RDS replica as the primary replica, how will a pod running in EKS in another region communicate to that?
+**Answer:**
+Pods in EKS should **NOT** connect using a hard-coded RDS endpoint. They should connect via a DNS abstraction (Route 53 or similar) that is updated during promotion.
 
-Pods in EKS should NOT connect using a hard-coded RDS endpoint.
-They should connect via a DNS abstraction (Route 53 or similar) that is updated during promotion.
+**Failover Workflow:**
+1.  Disaster occurs in Region A.
+2.  Promote read replica in Region B.
+3.  Update Route 53 record (automatic or manual).
+4.  DNS propagates.
+5.  Pods in EKS Region B reconnect to the new primary.
 
-Disaster occurs in Region A
+**Important:** We use a **Private Hosted Zone** in Route 53 instead of Public Hosted Zones.
 
-Promote read replica in Region B
+**Why do we use Private Hosted Zones?**
+*   **Private Endpoint:** RDS is in a VPC, and its endpoints are not publicly routable.
+*   **Internal Resolution:** A Private Hosted Zone (PHZ) resolves DNS inside the VPC only.
+*   **Security:** The database hostname is not exposed to the internet, preventing accidental public access.
+*   **Best Practice:** Aligns with least-privilege & zero-trust principles.
 
-Update Route 53 record (automatic or manual)
-
-DNS propagates
-
-Pods in EKS Region B reconnect to new primary
-
-One import point to mention is we use Private hosted zone of Route53 instead of Public Hosted Zones.
-
-Why do we use Private Hosted Zones?
-RDS Is in a VPC (Private Endpoint)
-
-RDS endpoints are not publicly routable
-
-EKS worker nodes run inside a VPC
-
-A Private Hosted Zone (PHZ) resolves DNS inside the VPC only
-
-Database hostname is not exposed to the internet
-
-No risk of accidental public access
-
-Aligns with least-privilege & zero-trust principles
+### 14. What is the impact of DNS TTL on failover?
+**Answer:**
+DNS TTL (Time To Live) has a direct and critical impact on failover speed when you use Route 53 for RDS DR with EKS.
+*   **Definition:** TTL defines how long DNS resolvers cache a record before querying Route 53 again.
+*   **Impact:**
+    *   **High TTL (e.g., 300s):** Slower failover. Pods will keep trying to connect to the old (failed) IP until the cache expires.
+    *   **Low TTL (e.g., 60s):** Faster failover, but higher query volume to Route 53.
+*   **Recommendation:** Use a low TTL (e.g., 60 seconds) for DR-related DNS records to minimize downtime during a switchover.
